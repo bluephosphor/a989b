@@ -1,14 +1,14 @@
 export const addMessageToStore = (state, payload) => {
   const { message, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
-
   if (sender !== null) {
-    return {
+    const newConvo =  {
       id: message.conversationId,
       otherUser: sender,
       messages: [message],
       latestMessageText: message.text
     };
+    return { ...newConvo };
   }
 
   return state.map((convo) => {
@@ -55,12 +55,12 @@ export const addSearchedUsersToStore = (state, users) => {
     currentUsers[convo.otherUser.id] = true;
   });
 
-  let newState = [...state];
+  const newState = [...state];
   users.forEach((user) => {
     // only create a fake convo if we don't already have a convo with this user
     if (!currentUsers[user.id]) {
       let fakeConvo = { otherUser: user, messages: [] };
-      newState = [...newState, fakeConvo];
+      newState.push(fakeConvo);
     }
   });
 
