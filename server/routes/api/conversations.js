@@ -79,4 +79,16 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.post('/:id', async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+
+    return res.json({ hello: 'hello'})
+  } catch(error) {
+    next(error);
+  }
+})
+
 module.exports = router;

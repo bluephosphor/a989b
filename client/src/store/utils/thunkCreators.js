@@ -6,6 +6,7 @@ import {
   setNewMessage,
   setSearchedUsers,
 } from "../conversations";
+import { setActiveChat } from "../activeConversation";
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -77,6 +78,11 @@ export const fetchConversations = () => async (dispatch) => {
     console.error(error);
   }
 };
+
+export const saveTimestamp = (userId, convoId) => async (dispatch) => {
+  await axios.post(`api/conversations/${convoId}`, { userId, convoId } );
+  dispatch(setActiveChat(userId));
+}
 
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
