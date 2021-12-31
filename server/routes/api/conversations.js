@@ -19,9 +19,9 @@ router.get("/", async (req, res, next) => {
         },
       },
       attributes: ["id"],
-      order: [[Message, "createdAt", "ASC"]],
+      order: [[Message, "updatedAt", "ASC"]],
       include: [
-        { model: Message, order: ["createdAt", "ASC"] },
+        { model: Message, order: ["updatedAt", "ASC"] },
         {
           model: User,
           as: "user1",
@@ -69,7 +69,34 @@ router.get("/", async (req, res, next) => {
       }
 
       // set properties for notification count and latest message preview
-      convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length-1].text;
+      const result = convoJSON.messages.reduce((accumulation, message) => {
+        switch (message.header){
+          case 'MESSAGE':
+            return {
+              lastMessage:        message.text,
+              notificationCount:  accumulation.notificationCount,
+              countFlag:          accumulation.countFlag
+            }
+          case 'READ_RECIEPT':
+            //start counting only after we've found our own read reciept
+            if (!accumulation.countFlag) {
+              return {
+                lastMessage:        accumulation.lastMessage,
+                notificationCount:  accumulation.notificationCount,
+                countFlag: (message.senderId !== convoJSON.otherUser.id) ? true : false
+              }
+            } else {
+              return {
+                lastMessage:        accumulation.lastMessage,
+                notificationCount:  accumulation.notificationCount + 1,
+                countFlag: true
+              }
+            }
+        }
+      }, {lastMessage: '', notificationCount: 0, countFlag: false});
+      
+      convoJSON.latestMessageText = result.lastMessage;
+      convoJSON.notificationCount = result.notificationCount;
       updatedConvos.unshift(convoJSON);
     })) 
 
@@ -78,17 +105,5 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
-
-router.post('/:id', async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.sendStatus(401);
-    }
-
-    return res.json({ hello: 'hello'})
-  } catch(error) {
-    next(error);
-  }
-})
 
 module.exports = router;

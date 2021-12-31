@@ -79,8 +79,24 @@ export const fetchConversations = () => async (dispatch) => {
   }
 };
 
+
 export const saveTimestamp = (userId, convoId) => async (dispatch) => {
-  await axios.post(`api/conversations/${convoId}`, { userId, convoId } );
+  
+  const readReceipt = {
+    header: 'READ_RECIEPT',
+    text: '',
+    senderId: userId,
+    conversationId: convoId
+  }
+  
+  const { data } = await axios.post("api/messages/", readReceipt );
+  let message;
+  if (Array.isArray(data.message)){
+    message = data.message[1][0];
+  } else  {
+    message = data.message
+  }
+  dispatch(setNewMessage(message, null));
   dispatch(setActiveChat(userId));
 }
 
@@ -101,7 +117,7 @@ const sendMessage = (data, body) => {
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body) => async (dispatch) => {
   try {
-    const data = await saveMessage(body);
+    const data = await saveMessage({...body, header: 'MESSAGE'});
 
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
