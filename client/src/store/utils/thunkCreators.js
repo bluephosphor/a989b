@@ -3,6 +3,7 @@ import socket from "../../socket";
 import {
   gotConversations,
   addConversation,
+  updateConversation,
   setNewMessage,
   setSearchedUsers,
 } from "../conversations";
@@ -80,26 +81,25 @@ export const fetchConversations = () => async (dispatch) => {
 };
 
 
-export const saveTimestamp = (userId, convoId) => async (dispatch) => {
+export const saveTimestamp = (recipient, convoId) => async (dispatch) => {
   
   const readReceipt = {
     header: 'READ_RECIEPT',
     text: '',
-    senderId: userId,
+    recipientId: recipient.id,
     conversationId: convoId
   }
   
   const { data } = await axios.post("api/messages/", readReceipt );
-  let message;
-  if (Array.isArray(data.message)){
-    message = data.message[1][0];
-  } else  {
-    message = data.message
-  }
-  dispatch(setNewMessage(message, null));
-  dispatch(setActiveChat(userId));
+  
+  if (data !== 'Created' && convoId) sendMessage(data, readReceipt);
+
 }
 
+export const pickActiveChat = (username, convoId) => async (dispatch, getState) => {
+  dispatch(updateConversation(0, convoId));
+  dispatch(setActiveChat(username));
+}
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
   return data;
@@ -123,6 +123,7 @@ export const postMessage = (body) => async (dispatch) => {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
       dispatch(setNewMessage(data.message, data.sender));
+      dispatch(updateConversation(0, body.conversationId));
     }
 
     sendMessage(data, body);

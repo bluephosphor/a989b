@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FormControl, FilledInput } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
-import { postMessage } from "../../store/utils/thunkCreators";
+import { postMessage, saveTimestamp } from "../../store/utils/thunkCreators";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -35,7 +35,7 @@ const Input = (props) => {
       conversationId,
       sender: conversationId ? null : user
     };
-    await postMessage(reqBody);
+    await postMessage(reqBody, otherUser, conversationId);
     setText("");
   };
 
@@ -57,8 +57,9 @@ const Input = (props) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    postMessage: (message) => {
+    postMessage: (message, recipient, convo) => {
       dispatch(postMessage(message));
+      dispatch(saveTimestamp(recipient, convo));
     },
   };
 };

@@ -74,7 +74,8 @@ router.get("/", async (req, res, next) => {
           case 'MESSAGE':
             return {
               lastMessage:        message.text,
-              notificationCount:  accumulation.notificationCount,
+              messageCount:       accumulation.messageCount + 1,
+              notificationCount:  (accumulation.countFlag) ? accumulation.notificationCount + 1 : accumulation.notificationCount,
               countFlag:          accumulation.countFlag
             }
           case 'READ_RECIEPT':
@@ -82,18 +83,23 @@ router.get("/", async (req, res, next) => {
             if (!accumulation.countFlag) {
               return {
                 lastMessage:        accumulation.lastMessage,
+                messageCount:       accumulation.messageCount,
                 notificationCount:  accumulation.notificationCount,
-                countFlag: (message.senderId !== convoJSON.otherUser.id) ? true : false
+                countFlag: (message.senderId !== convoJSON.otherUser.id)
               }
             } else {
               return {
                 lastMessage:        accumulation.lastMessage,
-                notificationCount:  accumulation.notificationCount + 1,
+                messageCount:       accumulation.messageCount,
+                notificationCount:  accumulation.notificationCount,
                 countFlag: true
               }
             }
         }
-      }, {lastMessage: '', notificationCount: 0, countFlag: false});
+      }, {lastMessage: '', messageCount: 0, notificationCount: 0, countFlag: false});
+
+      // if we never found our read receipt then our unread count is all the convo messages
+      if (!result.countFlag) result.notificationCount = result.messageCount;
       
       convoJSON.latestMessageText = result.lastMessage;
       convoJSON.notificationCount = result.notificationCount;

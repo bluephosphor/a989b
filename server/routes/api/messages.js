@@ -45,7 +45,9 @@ router.post("/", async (req, res, next) => {
               plain: false
             },
           );
-          return res.json({ message, sender });
+          const innerValues = message[1][0].dataValues;
+
+          return res.json({ message: innerValues, sender: null });
         } else {
           const message = await Message.create({ header, senderId, text, conversationId });
           return res.json({ message, sender });
