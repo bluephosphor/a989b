@@ -1,25 +1,18 @@
-const { Op } = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 const db = require("../db");
 const Message = require("./message");
 
 const Conversation = db.define("conversation", {});
 
-// find conversation given two user Ids
-
-Conversation.findConversation = async function (user1Id, user2Id) {
-  const conversation = await Conversation.findOne({
-    where: {
-      user1Id: {
-        [Op.or]: [user1Id, user2Id]
-      },
-      user2Id: {
-        [Op.or]: [user1Id, user2Id]
-      }
-    }
-  });
-
-  // return conversation or null if it doesn't exist
-  return conversation;
+// an example of how we could query conversations in this new format
+Conversation.findConvosByUser = async function(userId, convoId){
+	const conversations = await UsersConvos.findAll({
+		where: {
+			userId: userId,
+			conversationId: convoId
+		}
+	});
+	return conversations;
 };
 
-module.exports = Conversation;
+module.exports = Conversation; 
