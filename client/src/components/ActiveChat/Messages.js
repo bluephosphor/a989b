@@ -22,18 +22,18 @@ const Messages = (props) => {
     <Box>
       {messages.map((message) => {
         switch(message.header){
+          case 'READ_RECIEPT':
+            return message.senderId !== userId && (
+              <Box className={classes.readBox}>
+                <Avatar className={classes.readBubble} alt={otherUser.username} key={message.id} src={otherUser.photoUrl}/>
+              </Box>
+            );
           default:
             const time = moment(message.createdAt).format("h:mm");
             return message.senderId === userId ? (
               <SenderBubble key={message.id} text={message.text} time={time} />
             ) : (
               <OtherUserBubble key={message.id} text={message.text} time={time} otherUser={otherUser} />
-            );
-          case 'READ_RECIEPT':
-            return message.senderId !== userId && (
-              <Box className={classes.readBox}>
-                <Avatar className={classes.readBubble} alt={otherUser.username} key={message.id} src={otherUser.photoUrl}/>
-              </Box>
             );
         }
       })}

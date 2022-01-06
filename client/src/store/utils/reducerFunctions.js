@@ -1,5 +1,5 @@
 export const addMessageToStore = (state, payload) => {
-  const { message, sender } = payload;
+  const { message, receipt, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
     const newConvo = {
@@ -18,26 +18,22 @@ export const addMessageToStore = (state, payload) => {
       if (message.header === 'MESSAGE') {
         convoCopy.latestMessageText = message.text;
         convoCopy.notificationCount = convoCopy.notificationCount + 1;
-      } 
-      // when we recieve a read reciept, we want to remove any other instances 
-      // of read reciepts from this user that are currently in state
-      // so that we can essentially move them up in the list
-      let newMessages = [];
-      convoCopy.messages.forEach(msg => {
-        switch (msg.header) {
-          default:
-            newMessages = [...newMessages, msg];
-            break;
-          case 'READ_RECIEPT':
-            if (message.header !== 'READ_RECIEPT'
-              && msg.senderId === convoCopy.otherUser.id) {
-              newMessages = [...newMessages, msg];
-            }
-            break;
-        }
-      })
-      //now we can add the new messsage.
-      convoCopy.messages = [...newMessages, message];
+        convoCopy.messages = [...convoCopy.messages, message];
+        console.log(receipt);
+        if (receipt) convoCopy.messages = [...convoCopy.messages, receipt];
+      } else {
+        // when we recieve a read reciept, we want to remove any other instances 
+        // of read reciepts from this user that are currently in state
+        // so that we can essentially move them up in the list
+        let newMessages = [];
+        convoCopy.messages.forEach(msg => {
+          if (msg.header !== 'READ_RECIEPT' 
+          && msg.sender !== convoCopy.otherUser.id) 
+          newMessages = [...newMessages, msg];
+        })
+        //now we can add the new messsage.
+        convoCopy.messages = [...newMessages, message];
+      }
       return { ...convoCopy };
     } else {
       return convo;

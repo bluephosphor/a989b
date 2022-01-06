@@ -33,26 +33,27 @@ router.post("/", async (req, res, next) => {
 
         // we want to check if there's already a reciept for this user in the convo. 
         // if so, we only want to update it, not create it
-
-        const existingReciept = await Message.findOne(querySchema);
-
-        if (existingReciept) {
-          const message = await Message.update(
-            {text: ''},
-            {
-              ...querySchema,
-              returning: true,
-              plain: false
-            },
-          );
-          const innerValues = message[1][0].dataValues;
-
-          return res.json({ message: innerValues, sender: null });
-        } else {
+        
+        
+        const existingReciept = await Message.update(
+          {text: ''},
+          {
+            ...querySchema,
+            returning: true,
+            plain: false
+          },
+        ).then(([ rowsUpdate, [updatedMessage] ]) => {
+          console.log(updatedMessage)
+          if (updatedMessage){
+            const innerValues = updatedMessage.dataValues;
+            return res.json({ message: innerValues, sender: null });
+          } 
+        })
+        if (!existingReciept) {
           const message = await Message.create({ header, senderId, text, conversationId });
           return res.json({ message, sender });
         }
-
+        break;
       case 'MESSAGE':
         // if we already know conversation id, we can save time and just add it to message and return
         if (conversationId) {
@@ -82,9 +83,15 @@ router.post("/", async (req, res, next) => {
           text,
           conversationId: conversation.id,
         });
-        res.json({ message, sender });
-
-        }
+        // create our read receipt to be sent along with the message
+        const reciept = await Message.create({
+          header: 'READ_RECIEPT',
+          senderId,
+          text: '',
+          conversationId: conversation.id,
+        });
+        res.json({ message, reciept, sender });
+    }
   } catch (error) {
     next(error);
   }

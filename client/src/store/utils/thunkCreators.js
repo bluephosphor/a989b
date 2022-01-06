@@ -80,9 +80,12 @@ export const fetchConversations = () => async (dispatch) => {
   }
 };
 
+export const pickActiveChat = (username, convoId) => async (dispatch) => {
+  dispatch(updateConversation(0, convoId));
+  dispatch(setActiveChat(username));
+}
 
-export const saveTimestamp = (recipient, convoId) => async (dispatch) => {
-  
+export const saveTimestamp = (recipient, convoId) => async () => {
   const readReceipt = {
     header: 'READ_RECIEPT',
     text: '',
@@ -93,13 +96,8 @@ export const saveTimestamp = (recipient, convoId) => async (dispatch) => {
   const { data } = await axios.post("api/messages/", readReceipt );
   
   if (data !== 'Created' && convoId) sendMessage(data, readReceipt);
-
 }
 
-export const pickActiveChat = (username, convoId) => async (dispatch, getState) => {
-  dispatch(updateConversation(0, convoId));
-  dispatch(setActiveChat(username));
-}
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
   return data;
@@ -122,7 +120,7 @@ export const postMessage = (body) => async (dispatch) => {
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
-      dispatch(setNewMessage(data.message, data.sender));
+      dispatch(setNewMessage(data.message, data.sender, null));
       dispatch(updateConversation(0, body.conversationId));
     }
 

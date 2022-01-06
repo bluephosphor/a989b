@@ -10,16 +10,13 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   badge: {
-    width: '20px',
     height: '20px',
     borderRadius: "50%",
     backgroundColor: "#3F92FF",
     color: "white",
+    fontSize: 10,
+    alignItems: 'center',
     justifyContent: 'center'
-  },
-  badgeText: {
-    alignSelf: 'center',
-    fontSize: 10
   },
   username: {
     fontWeight: "bold",
@@ -30,6 +27,10 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
+  previewTextNew: {
+    fontWeight: 600,
+    color: "#000"
+  }
 }));
 
 const ChatContent = (props) => {
@@ -44,17 +45,13 @@ const ChatContent = (props) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography className={`${classes.previewText} ${classes[notificationCount > 0 && "previewTextNew"]}`}>
           {latestMessageText}
         </Typography>
       </Box>
-        {notificationCount > 0 && (
-          <Box>
-            <Badge className={classes.badge}>
-              <Typography className={classes.badgeText}>{notificationCount}</Typography>
-            </Badge>
-          </Box>
-        )}
+        <Box>
+          <Badge classes={{ badge: classes.badge }} badgeContent={notificationCount} />
+        </Box>
     </Box>
   );
 };
