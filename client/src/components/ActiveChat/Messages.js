@@ -22,7 +22,7 @@ const Messages = (props) => {
     <Box>
       {messages.map((message) => {
         switch(message.header){
-          case 'READ_RECIEPT':
+          case 'READ_RECEIPT':
             return message.senderId !== userId && (
               <Box className={classes.readBox}>
                 <Avatar className={classes.readBubble} alt={otherUser.username} key={message.id} src={otherUser.photoUrl}/>

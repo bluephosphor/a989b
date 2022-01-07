@@ -87,7 +87,7 @@ export const pickActiveChat = (username, convoId) => async (dispatch) => {
 
 export const saveTimestamp = (recipient, convoId) => async () => {
   const readReceipt = {
-    header: 'READ_RECIEPT',
+    header: 'READ_RECEIPT',
     text: '',
     recipientId: recipient.id,
     conversationId: convoId
@@ -103,12 +103,8 @@ const saveMessage = async (body) => {
   return data;
 };
 
-const sendMessage = (data, body) => {
-    socket.emit("new-message", {
-    message: data.message,
-    recipientId: body.recipientId,
-    sender: data.sender,
-  });
+const sendMessage = (data) => { 
+  socket.emit("new-message", data);
 };
 
 // message format to send: {recipientId, text, conversationId}
@@ -123,7 +119,6 @@ export const postMessage = (body) => async (dispatch) => {
       dispatch(setNewMessage(data.message, data.sender, null));
       dispatch(updateConversation(0, body.conversationId));
     }
-
     sendMessage(data, body);
   } catch (error) {
     console.error(error);

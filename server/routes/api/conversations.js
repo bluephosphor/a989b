@@ -78,8 +78,8 @@ router.get("/", async (req, res, next) => {
               notificationCount:  (accumulation.countFlag) ? accumulation.notificationCount + 1 : accumulation.notificationCount,
               countFlag:          accumulation.countFlag
             }
-          case 'READ_RECIEPT':
-            //start counting only after we've found our own read reciept
+          case 'READ_RECEIPT':
+            //start counting only after we've found our own read receipt
             if (!accumulation.countFlag) {
               return {
                 lastMessage:        accumulation.lastMessage,

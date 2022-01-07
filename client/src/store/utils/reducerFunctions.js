@@ -15,25 +15,20 @@ export const addMessageToStore = (state, payload) => {
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
       const convoCopy = { ...convo };
+      
       if (message.header === 'MESSAGE') {
         convoCopy.latestMessageText = message.text;
         convoCopy.notificationCount = convoCopy.notificationCount + 1;
         convoCopy.messages = [...convoCopy.messages, message];
-        console.log(receipt);
-        if (receipt) convoCopy.messages = [...convoCopy.messages, receipt];
+        if (receipt) {
+          convoCopy.messages = convoCopy.messages.filter(msg => msg.header === 'MESSAGE');
+          convoCopy.messages = [...convoCopy.messages,  receipt];
+        }
       } else {
-        // when we recieve a read reciept, we want to remove any other instances 
-        // of read reciepts from this user that are currently in state
-        // so that we can essentially move them up in the list
-        let newMessages = [];
-        convoCopy.messages.forEach(msg => {
-          if (msg.header !== 'READ_RECIEPT' 
-          && msg.sender !== convoCopy.otherUser.id) 
-          newMessages = [...newMessages, msg];
-        })
-        //now we can add the new messsage.
-        convoCopy.messages = [...newMessages, message];
+        convoCopy.messages = convoCopy.messages.filter(msg => msg.header === 'MESSAGE');
+        convoCopy.messages = [...convoCopy.messages,  message];
       }
+      
       return { ...convoCopy };
     } else {
       return convo;
