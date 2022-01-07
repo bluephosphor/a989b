@@ -29,7 +29,7 @@ export const addMessageToStore = (state, payload) => {
         convoCopy.messages = [...convoCopy.messages,  message];
       }
       
-      return { ...convoCopy };
+      return convoCopy;
     } else {
       return convo;
     }
