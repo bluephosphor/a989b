@@ -1,22 +1,35 @@
 export const addMessageToStore = (state, payload) => {
-  const { message, sender } = payload;
+  const { message, receipt, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
-    const newConvo =  {
+    const newConvo = {
       id: message.conversationId,
       otherUser: sender,
       messages: [message],
-      latestMessageText: message.text
+      latestMessageText: message.text,
+      notificationCount: 1
     };
-    return { ...newConvo };
+    return [...state, newConvo];
   }
-
+  
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
       const convoCopy = { ...convo };
-      convoCopy.messages = [...convoCopy.messages, message];
-      convoCopy.latestMessageText = message.text;
-      return {...convoCopy};
+      
+      if (message.header === 'MESSAGE') {
+        convoCopy.latestMessageText = message.text;
+        convoCopy.notificationCount = convoCopy.notificationCount + 1;
+        convoCopy.messages = [...convoCopy.messages, message];
+        if (receipt) {
+          convoCopy.messages = convoCopy.messages.filter(msg => msg.header === 'MESSAGE');
+          convoCopy.messages = [...convoCopy.messages,  receipt];
+        }
+      } else {
+        convoCopy.messages = convoCopy.messages.filter(msg => msg.header === 'MESSAGE');
+        convoCopy.messages = [...convoCopy.messages,  message];
+      }
+      
+      return convoCopy;
     } else {
       return convo;
     }
@@ -68,13 +81,24 @@ export const addSearchedUsersToStore = (state, users) => {
 };
 
 export const addNewConvoToStore = (state, recipientId, message) => {
-    return state.map((convo) => {
+  return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
       const convoCopy = { ...convo }
       convoCopy.id = message.conversationId;
       convoCopy.messages = [...convoCopy.messages, message];
       convoCopy.latestMessageText = message.text;
-      return {...convoCopy};
+      return { ...convoCopy };
+    } else {
+      return convo;
+    }
+  });
+};
+
+export const updateUnreadCount = (state, payload) => {
+  const { count, convoId } = payload;
+  return state.map((convo) => {
+    if (convo.id === convoId) {
+      return { ...convo, notificationCount: count }
     } else {
       return convo;
     }

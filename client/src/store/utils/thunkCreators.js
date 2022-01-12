@@ -3,9 +3,11 @@ import socket from "../../socket";
 import {
   gotConversations,
   addConversation,
+  updateConversation,
   setNewMessage,
   setSearchedUsers,
 } from "../conversations";
+import { setActiveChat } from "../activeConversation";
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -78,31 +80,45 @@ export const fetchConversations = () => async (dispatch) => {
   }
 };
 
+export const pickActiveChat = (username, convoId) => async (dispatch) => {
+  dispatch(updateConversation(0, convoId));
+  dispatch(setActiveChat(username));
+}
+
+export const saveTimestamp = (recipient, convoId) => async () => {
+  const readReceipt = {
+    header: 'READ_RECEIPT',
+    text: '',
+    recipientId: recipient.id,
+    conversationId: convoId
+  }
+  
+  const { data } = await axios.post("api/messages/", readReceipt );
+  
+  if (data !== 'Created' && convoId) sendMessage(data, readReceipt);
+}
+
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
   return data;
 };
 
-const sendMessage = (data, body) => {
-    socket.emit("new-message", {
-    message: data.message,
-    recipientId: body.recipientId,
-    sender: data.sender,
-  });
+const sendMessage = (data) => { 
+  socket.emit("new-message", data);
 };
 
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body) => async (dispatch) => {
   try {
-    const data = await saveMessage(body);
+    const data = await saveMessage({...body, header: 'MESSAGE'});
 
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
-      dispatch(setNewMessage(data.message, data.sender));
+      dispatch(setNewMessage(data.message, data.sender, null));
+      dispatch(updateConversation(0, body.conversationId));
     }
-
     sendMessage(data, body);
   } catch (error) {
     console.error(error);

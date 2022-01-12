@@ -19,9 +19,9 @@ router.get("/", async (req, res, next) => {
         },
       },
       attributes: ["id"],
-      order: [[Message, "createdAt", "ASC"]],
+      order: [[Message, "updatedAt", "ASC"]],
       include: [
-        { model: Message, order: ["createdAt", "ASC"] },
+        { model: Message, order: ["updatedAt", "ASC"] },
         {
           model: User,
           as: "user1",
@@ -69,7 +69,40 @@ router.get("/", async (req, res, next) => {
       }
 
       // set properties for notification count and latest message preview
-      convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length-1].text;
+      const result = convoJSON.messages.reduce((accumulation, message) => {
+        switch (message.header){
+          case 'MESSAGE':
+            return {
+              lastMessage:        message.text,
+              messageCount:       accumulation.messageCount + 1,
+              notificationCount:  (accumulation.countFlag) ? accumulation.notificationCount + 1 : accumulation.notificationCount,
+              countFlag:          accumulation.countFlag
+            }
+          case 'READ_RECEIPT':
+            //start counting only after we've found our own read receipt
+            if (!accumulation.countFlag) {
+              return {
+                lastMessage:        accumulation.lastMessage,
+                messageCount:       accumulation.messageCount,
+                notificationCount:  accumulation.notificationCount,
+                countFlag: (message.senderId !== convoJSON.otherUser.id)
+              }
+            } else {
+              return {
+                lastMessage:        accumulation.lastMessage,
+                messageCount:       accumulation.messageCount,
+                notificationCount:  accumulation.notificationCount,
+                countFlag: true
+              }
+            }
+        }
+      }, {lastMessage: '', messageCount: 0, notificationCount: 0, countFlag: false});
+
+      // if we never found our read receipt then our unread count is all the convo messages
+      if (!result.countFlag) result.notificationCount = result.messageCount;
+      
+      convoJSON.latestMessageText = result.lastMessage;
+      convoJSON.notificationCount = result.notificationCount;
       updatedConvos.unshift(convoJSON);
     })) 
 
